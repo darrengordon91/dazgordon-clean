@@ -1,15 +1,20 @@
 import { storyblokInit, apiPlugin } from '@storyblok/react';
 
-// Initialize Storyblok
-storyblokInit({
-  accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN,
-  use: [apiPlugin],
-  apiOptions: {
-    region: 'eu-central-1',
-  },
-  // Enable preview mode for draft content
-  enablePreviewMode: true,
-});
+// Initialize Storyblok with proper error handling
+try {
+  storyblokInit({
+    accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+    use: [apiPlugin],
+    apiOptions: {
+      region: 'eu-central-1',
+    },
+    // Enable preview mode for draft content
+    enablePreviewMode: true,
+  });
+  console.log('✅ StoryBlok initialized successfully');
+} catch (error) {
+  console.error('❌ Error initializing StoryBlok:', error);
+}
 
 // Storyblok components mapping
 export const components = {
@@ -62,6 +67,6 @@ export const components = {
 export const storyblokConfig = {
   spaceId: '287766077619539',
   region: 'eu-central-1',
-  previewToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN,
-  publicToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN,
+  previewToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+  publicToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN || '75Os0ynnS4rM27uvkM8EoQtt',
 };

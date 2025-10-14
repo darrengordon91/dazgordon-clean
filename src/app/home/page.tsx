@@ -6,16 +6,20 @@ export default async function HomePage({
 }: { 
   searchParams: { [key: string]: string | string[] | undefined } 
 }) {
-  const storyblokApi = getStoryblokApi();
-  
   // Check if we're in preview mode
   const isPreview = searchParams._storyblok !== undefined;
 
   try {
     console.log('🔍 Fetching StoryBlok content for home page...', isPreview ? 'draft' : 'published');
     
+    const storyblokApi = getStoryblokApi();
+    
+    // Use hardcoded token as fallback
+    const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt';
+    
     const { data } = await storyblokApi.get('cdn/stories/home', {
       version: isPreview ? 'draft' : 'published',
+      token: token,
       resolve_relations: ['featured_projects', 'featured_posts', 'featured_tools'],
     });
 
@@ -47,6 +51,8 @@ export default async function HomePage({
             <p className="font-semibold">StoryBlok Integration Error</p>
             <p>Unable to fetch content from StoryBlok. Please check your configuration.</p>
             <p className="text-sm mt-2">Error: {error instanceof Error ? error.message : 'Unknown error'}</p>
+            <p className="text-sm mt-1">Token: {process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN ? 'Set' : 'Not Set'}</p>
+            <p className="text-sm mt-1">Preview Mode: {isPreview ? 'Yes' : 'No'}</p>
           </div>
         </div>
       </div>
@@ -59,12 +65,15 @@ export async function generateMetadata({
 }: { 
   searchParams: { [key: string]: string | string[] | undefined } 
 }) {
-  const storyblokApi = getStoryblokApi();
   const isPreview = searchParams._storyblok !== undefined;
 
   try {
+    const storyblokApi = getStoryblokApi();
+    const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt';
+    
     const { data } = await storyblokApi.get('cdn/stories/home', {
       version: isPreview ? 'draft' : 'published',
+      token: token,
     });
 
     if (data.story) {
