@@ -7,20 +7,21 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
-  const [lastFetch, setLastFetch] = useState(null);
+  const [isPreview, setIsPreview] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Check if we're in StoryBlok preview mode
+    setIsPreview(window.location.search.includes('_storyblok'));
   }, []);
 
-  const fetchStoryblokContent = async (forceRefresh = false) => {
+  const fetchStoryblokContent = async (version = 'published') => {
     try {
-      console.log('🔍 Fetching StoryBlok content for home page...', forceRefresh ? '(forced refresh)' : '');
+      console.log('🔍 Fetching StoryBlok content for home page...', version);
       
-      // Use the preview token and add cache busting
+      // Use the preview token and determine version
       const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
-      const cacheBuster = forceRefresh ? `&_t=${Date.now()}` : '';
-      const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools${cacheBuster}`;
+      const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=${version}&resolve_relations=featured_projects,featured_posts,featured_tools`;
       console.log('API URL:', apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -42,9 +43,7 @@ export default function HomePage() {
       const data = await response.json();
       console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
       console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
-      console.log('Last updated:', data.story?.updated_at);
       setStory(data.story);
-      setLastFetch(new Date().toISOString());
     } catch (error) {
       console.error('❌ Error fetching StoryBlok content:', error);
       setError(error);
@@ -55,20 +54,67 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!mounted) return;
-    fetchStoryblokContent();
-  }, [mounted]);
-
-  // Auto-refresh every 30 seconds to catch CMS changes
-  useEffect(() => {
-    if (!mounted) return;
     
-    const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing StoryBlok content...');
-      fetchStoryblokContent(true);
-    }, 30000); // 30 seconds
+    // Fetch content based on preview mode
+    const version = isPreview ? 'draft' : 'published';
+    fetchStoryblokContent(version);
+  }, [mounted, isPreview]);
 
-    return () => clearInterval(interval);
-  }, [mounted]);
+  // StoryBlok Visual Editor integration
+  useEffect(() => {
+    if (!mounted || !isPreview) return;
+
+    // Initialize StoryBlok bridge for Visual Editor
+    const script = document.createElement('script');
+    script.src = '//app.storyblok.com/f/storyblok-v2-latest.js';
+    script.onload = () => {
+      if (window.storyblok) {
+        window.storyblok.init({
+          accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt',
+          bridge: true,
+          customParent: 'https://app.storyblok.com',
+          resolveRelations: ['featured_projects', 'featured_posts', 'featured_tools'],
+          apiOptions: {
+            region: 'eu-central-1'
+          }
+        });
+
+        // Listen for story changes in Visual Editor
+        window.storyblok.on('change', (event) => {
+          console.log('🔄 StoryBlok story changed:', event);
+          if (event.story && event.story.content) {
+            setStory(event.story);
+          }
+        });
+
+        // Listen for story input changes
+        window.storyblok.on('input', (event) => {
+          console.log('📝 StoryBlok story input changed:', event);
+          if (event.story && event.story.content) {
+            setStory(event.story);
+          }
+        });
+
+        // Listen for story published
+        window.storyblok.on('published', (event) => {
+          console.log('📢 StoryBlok story published:', event);
+          if (event.story && event.story.content) {
+            setStory(event.story);
+          }
+        });
+
+        console.log('✅ StoryBlok Visual Editor initialized');
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup
+      if (window.storyblok) {
+        window.storyblok.destroy();
+      }
+    };
+  }, [mounted, isPreview]);
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
@@ -90,7 +136,7 @@ export default function HomePage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600 dark:text-slate-300">Loading content from StoryBlok...</p>
           <button 
-            onClick={() => fetchStoryblokContent(true)}
+            onClick={() => fetchStoryblokContent(isPreview ? 'draft' : 'published')}
             className="mt-4 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Force Refresh
@@ -110,23 +156,24 @@ export default function HomePage() {
     console.log('🎨 Rendering StoryBlok content:', story.content);
     return (
       <div className="min-h-screen">
-        {/* Debug info - remove in production */}
-        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-50">
-          <div>Last fetch: {lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'}</div>
-          <div>Story updated: {story.updated_at ? new Date(story.updated_at).toLocaleTimeString() : 'Unknown'}</div>
-          <button 
-            onClick={() => fetchStoryblokContent(true)}
-            className="mt-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-          >
-            Refresh
-          </button>
-        </div>
+        {/* Debug info for preview mode */}
+        {isPreview && (
+          <div className="fixed top-4 right-4 bg-green-600 text-white text-xs p-2 rounded z-50">
+            <div>Preview Mode Active</div>
+            <div>Story ID: {story.id}</div>
+            <div>Last updated: {story.updated_at ? new Date(story.updated_at).toLocaleTimeString() : 'Unknown'}</div>
+          </div>
+        )}
 
         {story.content.body.map((block: any, index: number) => {
           switch (block.component) {
             case 'hero':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto text-center">
                     <h1 className="text-5xl font-bold text-gray-900 mb-6">
                       {block.title || 'Hey, I\'m Daz'}
@@ -150,7 +197,11 @@ export default function HomePage() {
             
             case 'marquee':
               return (
-                <section key={block._uid || index} className="py-4 bg-gray-900 text-white overflow-hidden">
+                <section 
+                  key={block._uid || index} 
+                  className="py-4 bg-gray-900 text-white overflow-hidden"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="animate-marquee whitespace-nowrap">
                     <span className="text-lg font-medium">{block.text}</span>
                   </div>
@@ -159,7 +210,11 @@ export default function HomePage() {
             
             case 'about_section':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-white"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto text-center">
                     <h2 className="text-4xl font-bold text-gray-900 mb-8">
                       {block.title || 'About Me'}
@@ -173,7 +228,11 @@ export default function HomePage() {
             
             case 'companies':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-gray-50">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-gray-50"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto text-center">
                     <h2 className="text-4xl font-bold text-gray-900 mb-12">
                       {block.title || 'Companies I\'ve Worked With'}
@@ -198,7 +257,11 @@ export default function HomePage() {
             
             case 'projects_section':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-white"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto">
                     <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
                       {block.title || 'Featured Projects'}
@@ -231,7 +294,11 @@ export default function HomePage() {
             
             case 'latest_work':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-gray-50">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-gray-50"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto">
                     <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
                       {block.title || 'Latest from the Blog'}
@@ -261,7 +328,11 @@ export default function HomePage() {
             
             case 'contact':
               return (
-                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                <section 
+                  key={block._uid || index} 
+                  className="py-20 px-6 bg-white"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto text-center">
                     <h2 className="text-4xl font-bold text-gray-900 mb-8">
                       {block.title || 'Let\'s Work Together'}
@@ -294,7 +365,11 @@ export default function HomePage() {
             
             default:
               return (
-                <div key={block._uid || index} className="py-8">
+                <div 
+                  key={block._uid || index} 
+                  className="py-8"
+                  {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
+                >
                   <div className="container mx-auto px-6">
                     <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                       {block.component}
@@ -319,7 +394,7 @@ export default function HomePage() {
       <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-50">
         <div>Using fallback content</div>
         <button 
-          onClick={() => fetchStoryblokContent(true)}
+          onClick={() => fetchStoryblokContent(isPreview ? 'draft' : 'published')}
           className="mt-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
         >
           Retry StoryBlok
