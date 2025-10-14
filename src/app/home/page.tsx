@@ -34,7 +34,23 @@ export default async function HomePage({
     );
   } catch (error) {
     console.error('❌ Error fetching home story:', error);
-    notFound();
+    
+    // Return a fallback page instead of notFound
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-6 py-20">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Daz Gordon</h1>
+          <p className="text-lg text-gray-600 mb-8">
+            Product Designer & Developer building digital products that matter.
+          </p>
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <p className="font-semibold">StoryBlok Integration Error</p>
+            <p>Unable to fetch content from StoryBlok. Please check your configuration.</p>
+            <p className="text-sm mt-2">Error: {error instanceof Error ? error.message : 'Unknown error'}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 
@@ -66,3 +82,5 @@ export async function generateMetadata({
     description: 'Product designer, builder, and entrepreneur sharing insights on design, AI, and product development.',
   };
 }
+
+export const dynamic = 'force-dynamic';
