@@ -7,51 +7,67 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [lastFetch, setLastFetch] = useState(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const fetchStoryblokContent = async (forceRefresh = false) => {
+    try {
+      console.log('🔍 Fetching StoryBlok content for home page...', forceRefresh ? '(forced refresh)' : '');
+      
+      // Use the preview token and add cache busting
+      const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
+      const cacheBuster = forceRefresh ? `&_t=${Date.now()}` : '';
+      const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools${cacheBuster}`;
+      console.log('API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`StoryBlok API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
+      console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
+      console.log('Last updated:', data.story?.updated_at);
+      setStory(data.story);
+      setLastFetch(new Date().toISOString());
+    } catch (error) {
+      console.error('❌ Error fetching StoryBlok content:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!mounted) return;
-
-    async function fetchStoryblokContent() {
-      try {
-        console.log('🔍 Fetching StoryBlok content for home page...');
-        
-        // Use the preview token
-        const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
-        const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
-        console.log('API URL:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`StoryBlok API error: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
-        console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
-        setStory(data.story);
-      } catch (error) {
-        console.error('❌ Error fetching StoryBlok content:', error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchStoryblokContent();
+  }, [mounted]);
+
+  // Auto-refresh every 30 seconds to catch CMS changes
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing StoryBlok content...');
+      fetchStoryblokContent(true);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, [mounted]);
 
   // Prevent hydration mismatch by not rendering until mounted
@@ -73,6 +89,12 @@ export default function HomePage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600 dark:text-slate-300">Loading content from StoryBlok...</p>
+          <button 
+            onClick={() => fetchStoryblokContent(true)}
+            className="mt-4 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Force Refresh
+          </button>
         </div>
       </div>
     );
@@ -88,6 +110,18 @@ export default function HomePage() {
     console.log('🎨 Rendering StoryBlok content:', story.content);
     return (
       <div className="min-h-screen">
+        {/* Debug info - remove in production */}
+        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-50">
+          <div>Last fetch: {lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'}</div>
+          <div>Story updated: {story.updated_at ? new Date(story.updated_at).toLocaleTimeString() : 'Unknown'}</div>
+          <button 
+            onClick={() => fetchStoryblokContent(true)}
+            className="mt-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+          >
+            Refresh
+          </button>
+        </div>
+
         {story.content.body.map((block: any, index: number) => {
           switch (block.component) {
             case 'hero':
@@ -281,6 +315,17 @@ export default function HomePage() {
   console.log('📝 Using fallback static content');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      {/* Debug info - remove in production */}
+      <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-50">
+        <div>Using fallback content</div>
+        <button 
+          onClick={() => fetchStoryblokContent(true)}
+          className="mt-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+        >
+          Retry StoryBlok
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
