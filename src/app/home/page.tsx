@@ -1,15 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { StoryblokComponent } from '@storyblok/react';
-import '../../lib/storyblok'; // Import to initialize StoryBlok
 
 export default function HomePage() {
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     async function fetchStoryblokContent() {
       try {
         console.log('🔍 Fetching StoryBlok content for home page...');
@@ -47,7 +52,19 @@ export default function HomePage() {
     }
 
     fetchStoryblokContent();
-  }, []);
+  }, [mounted]);
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state
   if (loading) {
@@ -66,12 +83,196 @@ export default function HomePage() {
     console.log('📝 Using fallback static content due to error');
   }
 
-  // If we have StoryBlok content, render it
-  if (story && story.content) {
+  // If we have StoryBlok content, render it manually
+  if (story && story.content && story.content.body) {
     console.log('🎨 Rendering StoryBlok content:', story.content);
     return (
       <div className="min-h-screen">
-        <StoryblokComponent blok={story.content} />
+        {story.content.body.map((block: any, index: number) => {
+          switch (block.component) {
+            case 'hero':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+                  <div className="container mx-auto text-center">
+                    <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                      {block.title || 'Hey, I\'m Daz'}
+                    </h1>
+                    {block.subtitle && (
+                      <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                        {block.subtitle}
+                      </p>
+                    )}
+                    {block.cta_text && block.cta_link && (
+                      <a
+                        href={block.cta_link}
+                        className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        {block.cta_text}
+                      </a>
+                    )}
+                  </div>
+                </section>
+              );
+            
+            case 'marquee':
+              return (
+                <section key={block._uid || index} className="py-4 bg-gray-900 text-white overflow-hidden">
+                  <div className="animate-marquee whitespace-nowrap">
+                    <span className="text-lg font-medium">{block.text}</span>
+                  </div>
+                </section>
+              );
+            
+            case 'about_section':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                  <div className="container mx-auto text-center">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-8">
+                      {block.title || 'About Me'}
+                    </h2>
+                    <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                      {block.content || 'I\'m a product designer and developer with over 10 years of experience.'}
+                    </p>
+                  </div>
+                </section>
+              );
+            
+            case 'companies':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-gray-50">
+                  <div className="container mx-auto text-center">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-12">
+                      {block.title || 'Companies I\'ve Worked With'}
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
+                      {block.companies?.map((company: any, companyIndex: number) => (
+                        <div key={companyIndex} className="text-gray-600 font-medium">
+                          {company.name || `Company ${companyIndex + 1}`}
+                        </div>
+                      )) || (
+                        <>
+                          <div className="text-gray-600 font-medium">Company 1</div>
+                          <div className="text-gray-600 font-medium">Company 2</div>
+                          <div className="text-gray-600 font-medium">Company 3</div>
+                          <div className="text-gray-600 font-medium">Company 4</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            
+            case 'projects_section':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                  <div className="container mx-auto">
+                    <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+                      {block.title || 'Featured Projects'}
+                    </h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {block.projects?.map((project: any, projectIndex: number) => (
+                        <div key={projectIndex} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                          <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600"></div>
+                          <div className="p-6">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                              {project.name || `Project ${projectIndex + 1}`}
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                              {project.description || 'A brief description of the project.'}
+                            </p>
+                            <a href={project.link || '#'} className="text-blue-600 font-semibold hover:underline">
+                              View Project →
+                            </a>
+                          </div>
+                        </div>
+                      )) || (
+                        <div className="text-center text-gray-500 col-span-full">
+                          No projects available
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            
+            case 'latest_work':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-gray-50">
+                  <div className="container mx-auto">
+                    <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+                      {block.title || 'Latest from the Blog'}
+                    </h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {block.posts?.map((post: any, postIndex: number) => (
+                        <div key={postIndex} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {post.title || `Blog Post ${postIndex + 1}`}
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {post.excerpt || 'A brief excerpt from the blog post.'}
+                          </p>
+                          <a href={post.link || '#'} className="text-blue-600 font-semibold hover:underline">
+                            Read More →
+                          </a>
+                        </div>
+                      )) || (
+                        <div className="text-center text-gray-500 col-span-full">
+                          No blog posts available
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            
+            case 'contact':
+              return (
+                <section key={block._uid || index} className="py-20 px-6 bg-white">
+                  <div className="container mx-auto text-center">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-8">
+                      {block.title || 'Let\'s Work Together'}
+                    </h2>
+                    <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                      {block.content || 'Ready to build something amazing? Get in touch and let\'s discuss your project.'}
+                    </p>
+                    <div className="flex justify-center space-x-6">
+                      {block.social_links?.map((link: any) => (
+                        <a
+                          key={link._uid}
+                          href={link.url}
+                          className="text-gray-600 hover:text-blue-600 transition-colors"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {link.platform || link.icon}
+                        </a>
+                      )) || (
+                        <>
+                          <a href="https://twitter.com/dazgordon" className="text-gray-600 hover:text-blue-600">Twitter</a>
+                          <a href="https://linkedin.com/in/dazgordon" className="text-gray-600 hover:text-blue-600">LinkedIn</a>
+                          <a href="https://github.com/dazgordon" className="text-gray-600 hover:text-blue-600">GitHub</a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            
+            default:
+              return (
+                <div key={block._uid || index} className="py-8">
+                  <div className="container mx-auto px-6">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                      {block.component}
+                    </h2>
+                    <p className="text-gray-600">
+                      Component: {block.component} - Content will be rendered here
+                    </p>
+                  </div>
+                </div>
+              );
+          }
+        })}
       </div>
     );
   }
