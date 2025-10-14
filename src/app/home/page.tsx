@@ -43,7 +43,28 @@ export default async function HomePage({
     }
 
     console.log('✅ StoryBlok story found:', data.story.name);
+    console.log('Story content:', JSON.stringify(data.story.content, null, 2));
     console.log('Story content components:', data.story.content?.body?.map((comp: any) => comp.component));
+
+    // If no body content, render a fallback
+    if (!data.story.content?.body || data.story.content.body.length === 0) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="container mx-auto px-6 py-20">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Daz Gordon</h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Product Designer & Developer building digital products that matter.
+            </p>
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+              <p className="font-semibold">StoryBlok Content Loaded</p>
+              <p>Content is being fetched from StoryBlok, but no body components found.</p>
+              <p className="text-sm mt-2">Story ID: {data.story.id}</p>
+              <p className="text-sm">Content structure: {JSON.stringify(data.story.content, null, 2)}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="min-h-screen">
