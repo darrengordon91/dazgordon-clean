@@ -5,22 +5,34 @@ import '../../lib/storyblok'; // Import to initialize StoryBlok
 async function getStoryblokContent() {
   try {
     console.log('🔍 Fetching StoryBlok content for home page...');
+    console.log('Environment variables:', {
+      accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN ? 'Set' : 'Not Set',
+      previewToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN ? 'Set' : 'Not Set',
+      spaceId: process.env.STORYBLOK_SPACE_ID || 'Not Set',
+      region: process.env.STORYBLOK_REGION || 'Not Set',
+    });
     
-    const response = await fetch(
-      `https://api.storyblok.com/v2/cdn/stories/home?token=${process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
+    console.log('API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
 
     if (!response.ok) {
-      throw new Error(`StoryBlok API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`StoryBlok API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
     console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
+    console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
     return data.story;
   } catch (error) {
     console.error('❌ Error fetching StoryBlok content:', error);
