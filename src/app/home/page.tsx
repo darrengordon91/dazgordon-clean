@@ -1,5 +1,15 @@
-import { StoryblokComponent, getStoryblokApi } from '@storyblok/react';
+import { StoryblokComponent, getStoryblokApi, storyblokInit, apiPlugin } from '@storyblok/react';
 import { notFound } from 'next/navigation';
+
+// Initialize StoryBlok before using getStoryblokApi
+storyblokInit({
+  accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+  use: [apiPlugin],
+  apiOptions: {
+    region: 'eu-central-1',
+  },
+  enablePreviewMode: true,
+});
 
 export default async function HomePage({ 
   searchParams 
@@ -13,6 +23,10 @@ export default async function HomePage({
     console.log('🔍 Fetching StoryBlok content for home page...', isPreview ? 'draft' : 'published');
     
     const storyblokApi = getStoryblokApi();
+    
+    if (!storyblokApi) {
+      throw new Error('StoryBlok API not initialized');
+    }
     
     // Use hardcoded token as fallback
     const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt';
