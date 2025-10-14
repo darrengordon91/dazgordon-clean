@@ -12,7 +12,9 @@ async function getStoryblokContent() {
       region: process.env.STORYBLOK_REGION || 'Not Set',
     });
     
-    const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
+    // Hardcode the token for testing
+    const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt';
+    const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
     console.log('API URL:', apiUrl);
     
     const response = await fetch(apiUrl, {
