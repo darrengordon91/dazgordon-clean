@@ -9,7 +9,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [updateCount, setUpdateCount] = useState(0);
   const storyRef = useRef(null);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function HomePage() {
     fetchStoryblokContent(version);
   }, [mounted, isPreview, fetchStoryblokContent]);
 
-  // StoryBlok Visual Editor integration - completely rewritten to prevent React conflicts
+  // StoryBlok Visual Editor integration - COMPLETELY REWRITTEN to prevent DOM conflicts
   useEffect(() => {
     if (!mounted || !isPreview) return;
 
@@ -73,9 +73,10 @@ export default function HomePage() {
     const initStoryblok = () => {
       if (window.storyblok && !storyblokInitialized) {
         try {
+          // Initialize StoryBlok with bridge DISABLED to prevent DOM manipulation
           window.storyblok.init({
             accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt',
-            bridge: true,
+            bridge: false, // DISABLE bridge to prevent DOM conflicts
             customParent: 'https://app.storyblok.com',
             resolveRelations: ['featured_projects', 'featured_posts', 'featured_tools'],
             apiOptions: {
@@ -83,14 +84,10 @@ export default function HomePage() {
             }
           });
 
-          // Store the original story for reference
-          let originalStory = null;
-
-          // Listen for story changes in Visual Editor
-          window.storyblok.on('change', (event) => {
-            console.log('🔄 StoryBlok story changed:', event);
+          // Manually handle story updates without bridge DOM manipulation
+          const handleStoryUpdate = (event) => {
+            console.log('🔄 StoryBlok story updated:', event);
             if (event.story && event.story.content) {
-              originalStory = event.story;
               setIsUpdating(true);
               
               // Clear any existing timeout
@@ -98,57 +95,27 @@ export default function HomePage() {
                 clearTimeout(updateTimeout);
               }
               
-              // Use a longer delay to ensure React has time to process
-              updateTimeout = setTimeout(() => {
-                setStory({ ...event.story }); // Create a new object to trigger re-render
-                setForceUpdate(prev => prev + 1); // Force a complete re-render
-                setIsUpdating(false);
-              }, 200);
-            }
-          });
-
-          // Listen for story input changes
-          window.storyblok.on('input', (event) => {
-            console.log('📝 StoryBlok story input changed:', event);
-            if (event.story && event.story.content) {
-              originalStory = event.story;
-              setIsUpdating(true);
-              
-              // Clear any existing timeout
-              if (updateTimeout) {
-                clearTimeout(updateTimeout);
-              }
-              
-              // Use a longer delay to ensure React has time to process
-              updateTimeout = setTimeout(() => {
-                setStory({ ...event.story }); // Create a new object to trigger re-render
-                setForceUpdate(prev => prev + 1); // Force a complete re-render
-                setIsUpdating(false);
-              }, 200);
-            }
-          });
-
-          // Listen for story published
-          window.storyblok.on('published', (event) => {
-            console.log('📢 StoryBlok story published:', event);
-            if (event.story && event.story.content) {
-              originalStory = event.story;
-              setIsUpdating(true);
-              
-              if (updateTimeout) {
-                clearTimeout(updateTimeout);
-              }
-              
+              // Force a complete re-render by updating the story state
               updateTimeout = setTimeout(() => {
                 setStory({ ...event.story });
-                setForceUpdate(prev => prev + 1);
+                setUpdateCount(prev => prev + 1);
                 setIsUpdating(false);
-              }, 200);
+                console.log('✅ Story updated successfully');
+              }, 100);
             }
-          });
+          };
+
+          // Listen for story changes in Visual Editor
+          window.storyblok.on('change', handleStoryUpdate);
+
+          // Listen for story input changes
+          window.storyblok.on('input', handleStoryUpdate);
+
+          // Listen for story published
+          window.storyblok.on('published', handleStoryUpdate);
 
           storyblokInitialized = true;
-          console.log('✅ StoryBlok Visual Editor initialized');
+          console.log('✅ StoryBlok Visual Editor initialized (bridge disabled)');
         } catch (error) {
           console.error('❌ Error initializing StoryBlok:', error);
         }
@@ -223,7 +190,7 @@ export default function HomePage() {
   if (story && story.content && story.content.body) {
     console.log('🎨 Rendering StoryBlok content:', story.content);
     return (
-      <div className="min-h-screen" key={`story-${forceUpdate}`} ref={storyRef}>
+      <div className="min-h-screen" key={`story-container-${updateCount}`} ref={storyRef}>
         {/* Debug info for preview mode */}
         {isPreview && (
           <div className="fixed top-4 right-4 bg-green-600 text-white text-xs p-2 rounded z-50">
@@ -231,13 +198,14 @@ export default function HomePage() {
             <div>Story ID: {story.id}</div>
             <div>Last updated: {story.updated_at ? new Date(story.updated_at).toLocaleTimeString() : 'Unknown'}</div>
             {isUpdating && <div className="text-yellow-300">Updating...</div>}
-            <div>Force Update: {forceUpdate}</div>
+            <div>Update Count: {updateCount}</div>
+            <div>Bridge: Disabled</div>
           </div>
         )}
 
         {story.content.body.map((block: any, index: number) => {
-          // Create a completely unique key that includes forceUpdate to force re-render
-          const blockKey = `block-${block._uid || 'block'}-${index}-${block.component}-${forceUpdate}`;
+          // Create a completely unique key that includes updateCount to force re-render
+          const blockKey = `block-${block._uid || 'block'}-${index}-${block.component}-${updateCount}`;
           
           switch (block.component) {
             case 'hero':
@@ -312,7 +280,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
                       {block.companies?.map((company: any, companyIndex: number) => (
-                        <div key={`company-${companyIndex}-${company._uid || companyIndex}-${forceUpdate}`} className="text-gray-600 font-medium">
+                        <div key={`company-${companyIndex}-${company._uid || companyIndex}-${updateCount}`} className="text-gray-600 font-medium">
                           {company.name || `Company ${companyIndex + 1}`}
                         </div>
                       )) || (
@@ -341,7 +309,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {block.projects?.map((project: any, projectIndex: number) => (
-                        <div key={`project-${projectIndex}-${project._uid || projectIndex}-${forceUpdate}`} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                        <div key={`project-${projectIndex}-${project._uid || projectIndex}-${updateCount}`} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                           <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600"></div>
                           <div className="p-6">
                             <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -378,7 +346,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {block.posts?.map((post: any, postIndex: number) => (
-                        <div key={`post-${postIndex}-${post._uid || postIndex}-${forceUpdate}`} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div key={`post-${postIndex}-${post._uid || postIndex}-${updateCount}`} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                           <h3 className="text-xl font-bold text-gray-900 mb-2">
                             {post.title || `Blog Post ${postIndex + 1}`}
                           </h3>
@@ -416,7 +384,7 @@ export default function HomePage() {
                     <div className="flex justify-center space-x-6">
                       {block.social_links?.map((link: any) => (
                         <a
-                          key={`link-${link._uid || Math.random()}-${forceUpdate}`}
+                          key={`link-${link._uid || Math.random()}-${updateCount}`}
                           href={link.url}
                           className="text-gray-600 hover:text-blue-600 transition-colors"
                           target="_blank"
