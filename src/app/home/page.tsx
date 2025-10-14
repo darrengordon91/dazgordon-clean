@@ -1,26 +1,10 @@
-import { StoryblokComponent, getStoryblokApi } from '@storyblok/react';
-import { notFound } from 'next/navigation';
-
-export default async function HomePage() {
-  const storyblokApi = getStoryblokApi();
-
-  try {
-    const { data } = await storyblokApi.get('cdn/stories/home', {
-      version: 'published',
-      resolve_relations: ['featured_projects', 'featured_posts'],
-    });
-
-    if (!data.story) {
-      notFound();
-    }
-
-    return (
-      <div className="min-h-screen">
-        <StoryblokComponent blok={data.story.content} />
-      </div>
-    );
-  } catch (error) {
-    console.error('Error fetching home story:', error);
-    notFound();
-  }
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-blue-100 p-8">
+      <h1 className="text-4xl font-bold text-blue-900">Home Page Test</h1>
+      <p className="text-lg text-blue-700 mt-4">
+        This is a simple test page to verify the /home route works.
+      </p>
+    </div>
+  );
 }
