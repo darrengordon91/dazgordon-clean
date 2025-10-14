@@ -5,15 +5,9 @@ import '../../lib/storyblok'; // Import to initialize StoryBlok
 async function getStoryblokContent() {
   try {
     console.log('🔍 Fetching StoryBlok content for home page...');
-    console.log('Environment variables:', {
-      accessToken: process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN ? 'Set' : 'Not Set',
-      previewToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN ? 'Set' : 'Not Set',
-      spaceId: process.env.STORYBLOK_SPACE_ID || 'Not Set',
-      region: process.env.STORYBLOK_REGION || 'Not Set',
-    });
     
     // Hardcode the token for testing
-    const token = process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt';
+    const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
     const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
     console.log('API URL:', apiUrl);
     
