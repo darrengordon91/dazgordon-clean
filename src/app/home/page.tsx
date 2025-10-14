@@ -1,43 +1,70 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { StoryblokComponent } from '@storyblok/react';
 import '../../lib/storyblok'; // Import to initialize StoryBlok
 
-// Function to fetch StoryBlok content at build time
-async function getStoryblokContent() {
-  try {
-    console.log('🔍 Fetching StoryBlok content for home page...');
-    
-    // Hardcode the token for testing
-    const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
-    const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
-    console.log('API URL:', apiUrl);
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+export default function HomePage() {
+  const [story, setStory] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
+  useEffect(() => {
+    async function fetchStoryblokContent() {
+      try {
+        console.log('🔍 Fetching StoryBlok content for home page...');
+        
+        // Use the preview token
+        const token = 'eHn8yhaa2KyhmUlzKb9PHgtt';
+        const apiUrl = `https://api.storyblok.com/v2/cdn/stories/home?token=${token}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`;
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error Response:', errorText);
-      throw new Error(`StoryBlok API error: ${response.status} ${response.statusText} - ${errorText}`);
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          throw new Error(`StoryBlok API error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
+        console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
+        setStory(data.story);
+      } catch (error) {
+        console.error('❌ Error fetching StoryBlok content:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    const data = await response.json();
-    console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
-    console.log('Story content components:', data.story?.content?.body?.map((comp: any) => comp.component));
-    return data.story;
-  } catch (error) {
-    console.error('❌ Error fetching StoryBlok content:', error);
-    return null;
-  }
-}
+    fetchStoryblokContent();
+  }, []);
 
-export default async function HomePage() {
-  const story = await getStoryblokContent();
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300">Loading content from StoryBlok...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    console.log('📝 Using fallback static content due to error');
+  }
 
   // If we have StoryBlok content, render it
   if (story && story.content) {
