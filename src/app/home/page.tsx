@@ -1,4 +1,48 @@
-export default function HomePage() {
+import { StoryblokComponent } from '@storyblok/react';
+import '../../lib/storyblok'; // Import to initialize StoryBlok
+
+// Function to fetch StoryBlok content at build time
+async function getStoryblokContent() {
+  try {
+    console.log('🔍 Fetching StoryBlok content for home page...');
+    
+    const response = await fetch(
+      `https://api.storyblok.com/v2/cdn/stories/home?token=${process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN}&version=published&resolve_relations=featured_projects,featured_posts,featured_tools`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`StoryBlok API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ StoryBlok content fetched successfully:', data.story?.name);
+    return data.story;
+  } catch (error) {
+    console.error('❌ Error fetching StoryBlok content:', error);
+    return null;
+  }
+}
+
+export default async function HomePage() {
+  const story = await getStoryblokContent();
+
+  // If we have StoryBlok content, render it
+  if (story && story.content) {
+    console.log('🎨 Rendering StoryBlok content:', story.content);
+    return (
+      <div className="min-h-screen">
+        <StoryblokComponent blok={story.content} />
+      </div>
+    );
+  }
+
+  // Fallback to static content if StoryBlok fails
+  console.log('📝 Using fallback static content');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Navigation */}
