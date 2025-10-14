@@ -6,41 +6,28 @@ interface HeroProps {
     subtitle?: string;
     cta_text?: string;
     cta_link?: string;
-    background_image?: string;
   };
 }
 
 export default function Hero({ blok }: HeroProps) {
   return (
-    <section 
-      data-blok-c={JSON.stringify(blok)} 
-      data-blok-uid={blok._uid}
-      className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800"
-    >
-      {blok.background_image && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${blok.background_image})` }}
-        />
-      )}
-      <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-          {blok.title || 'Daz Gordon'}
+    <section className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto text-center">
+        <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          {blok.title || 'Hey, I\'m Daz'}
         </h1>
         {blok.subtitle && (
-          <p className="mt-6 text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             {blok.subtitle}
           </p>
         )}
         {blok.cta_text && blok.cta_link && (
-          <div className="mt-10 flex justify-center space-x-4">
-            <a 
-              href={blok.cta_link}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-            >
-              {blok.cta_text}
-            </a>
-          </div>
+          <a
+            href={blok.cta_link}
+            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {blok.cta_text}
+          </a>
         )}
       </div>
     </section>
