@@ -1,5 +1,15 @@
-import { StoryblokComponent, getStoryblokApi } from '@storyblok/react';
+import { StoryblokComponent, getStoryblokApi, storyblokInit, apiPlugin } from '@storyblok/react';
 import { notFound } from 'next/navigation';
+
+// Initialize StoryBlok
+storyblokInit({
+  accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+  use: [apiPlugin],
+  apiOptions: {
+    region: 'eu-central-1',
+  },
+  enablePreviewMode: true,
+});
 
 export default async function HomePage({ 
   searchParams 
