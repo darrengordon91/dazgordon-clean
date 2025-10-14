@@ -1,10 +1,9 @@
 [build]
   command = "npm run build"
-  publish = "out"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build.environment]
-  NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN = "75Os0ynnS4rM27uvkM8EoQtt"
-  NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN = "eHn8yhaa2KyhmUlzKb9PHgtt"
-  STORYBLOK_SPACE_ID = "287766077619539"
-  STORYBLOK_REGION = "eu-central-1"
-  NODE_ENV = "production"
+  NEXT_PRIVATE_TARGET = "server"

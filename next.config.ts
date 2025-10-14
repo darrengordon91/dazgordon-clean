@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Remove static export to enable SSR for StoryBlok Visual Editor
+  // output: 'export', // REMOVED - this was causing the hydration mismatch
   trailingSlash: true,
   images: {
     unoptimized: true
