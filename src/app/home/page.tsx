@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export default function HomePage() {
   const [story, setStory] = useState(null);
@@ -8,6 +8,7 @@ export default function HomePage() {
   const [error, setError] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -15,7 +16,7 @@ export default function HomePage() {
     setIsPreview(window.location.search.includes('_storyblok'));
   }, []);
 
-  const fetchStoryblokContent = async (version = 'published') => {
+  const fetchStoryblokContent = useCallback(async (version = 'published') => {
     try {
       console.log('🔍 Fetching StoryBlok content for home page...', version);
       
@@ -50,7 +51,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -58,60 +59,95 @@ export default function HomePage() {
     // Fetch content based on preview mode
     const version = isPreview ? 'draft' : 'published';
     fetchStoryblokContent(version);
-  }, [mounted, isPreview]);
+  }, [mounted, isPreview, fetchStoryblokContent]);
 
   // StoryBlok Visual Editor integration
   useEffect(() => {
     if (!mounted || !isPreview) return;
 
+    let storyblokInitialized = false;
+
+    const initStoryblok = () => {
+      if (window.storyblok && !storyblokInitialized) {
+        try {
+          window.storyblok.init({
+            accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt',
+            bridge: true,
+            customParent: 'https://app.storyblok.com',
+            resolveRelations: ['featured_projects', 'featured_posts', 'featured_tools'],
+            apiOptions: {
+              region: 'eu-central-1'
+            }
+          });
+
+          // Listen for story changes in Visual Editor
+          window.storyblok.on('change', (event) => {
+            console.log('🔄 StoryBlok story changed:', event);
+            if (event.story && event.story.content) {
+              setIsUpdating(true);
+              // Use setTimeout to ensure React has time to process the update
+              setTimeout(() => {
+                setStory(event.story);
+                setIsUpdating(false);
+              }, 100);
+            }
+          });
+
+          // Listen for story input changes
+          window.storyblok.on('input', (event) => {
+            console.log('📝 StoryBlok story input changed:', event);
+            if (event.story && event.story.content) {
+              setIsUpdating(true);
+              // Use setTimeout to ensure React has time to process the update
+              setTimeout(() => {
+                setStory(event.story);
+                setIsUpdating(false);
+              }, 100);
+            }
+          });
+
+          // Listen for story published
+          window.storyblok.on('published', (event) => {
+            console.log('📢 StoryBlok story published:', event);
+            if (event.story && event.story.content) {
+              setIsUpdating(true);
+              setTimeout(() => {
+                setStory(event.story);
+                setIsUpdating(false);
+              }, 100);
+            }
+          });
+
+          storyblokInitialized = true;
+          console.log('✅ StoryBlok Visual Editor initialized');
+        } catch (error) {
+          console.error('❌ Error initializing StoryBlok:', error);
+        }
+      }
+    };
+
     // Initialize StoryBlok bridge for Visual Editor
     const script = document.createElement('script');
     script.src = '//app.storyblok.com/f/storyblok-v2-latest.js';
-    script.onload = () => {
-      if (window.storyblok) {
-        window.storyblok.init({
-          accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt',
-          bridge: true,
-          customParent: 'https://app.storyblok.com',
-          resolveRelations: ['featured_projects', 'featured_posts', 'featured_tools'],
-          apiOptions: {
-            region: 'eu-central-1'
-          }
-        });
-
-        // Listen for story changes in Visual Editor
-        window.storyblok.on('change', (event) => {
-          console.log('🔄 StoryBlok story changed:', event);
-          if (event.story && event.story.content) {
-            setStory(event.story);
-          }
-        });
-
-        // Listen for story input changes
-        window.storyblok.on('input', (event) => {
-          console.log('📝 StoryBlok story input changed:', event);
-          if (event.story && event.story.content) {
-            setStory(event.story);
-          }
-        });
-
-        // Listen for story published
-        window.storyblok.on('published', (event) => {
-          console.log('📢 StoryBlok story published:', event);
-          if (event.story && event.story.content) {
-            setStory(event.story);
-          }
-        });
-
-        console.log('✅ StoryBlok Visual Editor initialized');
-      }
+    script.onload = initStoryblok;
+    script.onerror = () => {
+      console.error('❌ Failed to load StoryBlok bridge script');
     };
     document.head.appendChild(script);
 
+    // Also try to initialize if script is already loaded
+    if (window.storyblok) {
+      initStoryblok();
+    }
+
     return () => {
       // Cleanup
-      if (window.storyblok) {
-        window.storyblok.destroy();
+      if (window.storyblok && storyblokInitialized) {
+        try {
+          window.storyblok.destroy();
+        } catch (error) {
+          console.error('Error destroying StoryBlok:', error);
+        }
       }
     };
   }, [mounted, isPreview]);
@@ -162,15 +198,19 @@ export default function HomePage() {
             <div>Preview Mode Active</div>
             <div>Story ID: {story.id}</div>
             <div>Last updated: {story.updated_at ? new Date(story.updated_at).toLocaleTimeString() : 'Unknown'}</div>
+            {isUpdating && <div className="text-yellow-300">Updating...</div>}
           </div>
         )}
 
         {story.content.body.map((block: any, index: number) => {
+          // Add a unique key that includes the block's _uid and index to prevent React key issues
+          const blockKey = `${block._uid || 'block'}-${index}-${block.component}`;
+          
           switch (block.component) {
             case 'hero':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -198,7 +238,7 @@ export default function HomePage() {
             case 'marquee':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-4 bg-gray-900 text-white overflow-hidden"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -211,7 +251,7 @@ export default function HomePage() {
             case 'about_section':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-white"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -229,7 +269,7 @@ export default function HomePage() {
             case 'companies':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-gray-50"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -239,7 +279,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
                       {block.companies?.map((company: any, companyIndex: number) => (
-                        <div key={companyIndex} className="text-gray-600 font-medium">
+                        <div key={`company-${companyIndex}-${company._uid || companyIndex}`} className="text-gray-600 font-medium">
                           {company.name || `Company ${companyIndex + 1}`}
                         </div>
                       )) || (
@@ -258,7 +298,7 @@ export default function HomePage() {
             case 'projects_section':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-white"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -268,7 +308,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {block.projects?.map((project: any, projectIndex: number) => (
-                        <div key={projectIndex} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                        <div key={`project-${projectIndex}-${project._uid || projectIndex}`} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                           <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600"></div>
                           <div className="p-6">
                             <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -295,7 +335,7 @@ export default function HomePage() {
             case 'latest_work':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-gray-50"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -305,7 +345,7 @@ export default function HomePage() {
                     </h2>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {block.posts?.map((post: any, postIndex: number) => (
-                        <div key={postIndex} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div key={`post-${postIndex}-${post._uid || postIndex}`} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                           <h3 className="text-xl font-bold text-gray-900 mb-2">
                             {post.title || `Blog Post ${postIndex + 1}`}
                           </h3>
@@ -329,7 +369,7 @@ export default function HomePage() {
             case 'contact':
               return (
                 <section 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-20 px-6 bg-white"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
@@ -343,7 +383,7 @@ export default function HomePage() {
                     <div className="flex justify-center space-x-6">
                       {block.social_links?.map((link: any) => (
                         <a
-                          key={link._uid}
+                          key={`link-${link._uid || Math.random()}`}
                           href={link.url}
                           className="text-gray-600 hover:text-blue-600 transition-colors"
                           target="_blank"
@@ -366,7 +406,7 @@ export default function HomePage() {
             default:
               return (
                 <div 
-                  key={block._uid || index} 
+                  key={blockKey}
                   className="py-8"
                   {...(isPreview ? { 'data-blok-c': JSON.stringify(block), 'data-blok-uid': block._uid } : {})}
                 >
