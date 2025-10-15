@@ -33,3 +33,4 @@ export default function RootLayout({
   );
 }
 // Trigger deployment Wed Oct 15 10:41:35 CEST 2025
+// Force deployment Wed Oct 15 11:19:32 CEST 2025
