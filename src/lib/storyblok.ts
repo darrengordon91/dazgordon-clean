@@ -1,42 +1,50 @@
 import { storyblokInit, apiPlugin } from '@storyblok/react';
+import Page from '../components/Page';
+import Hero from '../components/blocks/Hero';
+import Marquee from '../components/blocks/Marquee';
+import AboutSection from '../components/blocks/AboutSection';
+import Companies from '../components/blocks/Companies';
+import ProjectsSection from '../components/blocks/ProjectsSection';
+import LatestWork from '../components/blocks/LatestWork';
+import Contact from '../components/blocks/Contact';
 
-// Storyblok components mapping - Working components that match CMS structure
+// Storyblok components mapping - Direct imports for better reliability
 export const components = {
   // Page-level components
-  page: () => import('../components/Page'),
+  page: Page,
   
   // Core content blocks (working components)
-  hero: () => import('../components/blocks/Hero'),
-  marquee: () => import('../components/blocks/Marquee'),
-  about_section: () => import('../components/blocks/AboutSection'),
-  companies: () => import('../components/blocks/Companies'),
-  projects_section: () => import('../components/blocks/ProjectsSection'),
-  latest_work: () => import('../components/blocks/LatestWork'),
-  contact: () => import('../components/blocks/Contact'),
+  hero: Hero,
+  marquee: Marquee,
+  about_section: AboutSection,
+  companies: Companies,
+  projects_section: ProjectsSection,
+  latest_work: LatestWork,
+  contact: Contact,
   
   // Placeholder components for future expansion
-  company_item: () => import('../components/blocks/Companies'),
-  project_item: () => import('../components/blocks/ProjectsSection'),
-  blog_post_item: () => import('../components/blocks/LatestWork'),
-  beliefs: () => import('../components/blocks/AboutSection'),
-  belief_item: () => import('../components/blocks/AboutSection'),
-  journey: () => import('../components/blocks/AboutSection'),
-  timeline_item: () => import('../components/blocks/AboutSection'),
-  what_i_do: () => import('../components/blocks/AboutSection'),
-  tool_item: () => import('../components/blocks/AboutSection'),
-  newsletter_tease: () => import('../components/blocks/Contact'),
-  project: () => import('../components/blocks/ProjectsSection'),
-  blog_post: () => import('../components/blocks/LatestWork'),
-  tool: () => import('../components/blocks/AboutSection'),
-  idea: () => import('../components/blocks/AboutSection'),
-  book_note: () => import('../components/blocks/LatestWork'),
-  hundred_ways: () => import('../components/blocks/AboutSection'),
-  stuff_i_own: () => import('../components/blocks/AboutSection'),
-  strong_opinion: () => import('../components/blocks/AboutSection'),
-  services: () => import('../components/blocks/Contact'),
-  service_item: () => import('../components/blocks/Contact'),
-  social_link: () => import('../components/blocks/Contact'),
-  wavy_divider: () => import('../components/blocks/Marquee'),
+  company_item: Companies,
+  project_item: ProjectsSection,
+  blog_post_item: LatestWork,
+  beliefs: AboutSection,
+  belief_item: AboutSection,
+  journey: AboutSection,
+  timeline_item: AboutSection,
+  what_i_do: AboutSection,
+  tool_item: AboutSection,
+  newsletter_tease: Contact,
+  project: ProjectsSection,
+  blog_post: LatestWork,
+  tool: AboutSection,
+  idea: AboutSection,
+  book_note: LatestWork,
+  hundred_ways: AboutSection,
+  stuff_i_own: AboutSection,
+  strong_opinion: AboutSection,
+  services: Contact,
+  service_item: Contact,
+  social_link: Contact,
+  wavy_divider: Marquee,
 };
 
 // Initialize Storyblok with proper error handling
