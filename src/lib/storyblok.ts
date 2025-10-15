@@ -1,21 +1,5 @@
 import { storyblokInit, apiPlugin } from '@storyblok/react';
 
-// Initialize Storyblok with proper error handling
-try {
-  storyblokInit({
-    accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
-    use: [apiPlugin],
-    apiOptions: {
-      region: 'eu-central-1',
-    },
-    // Enable preview mode for draft content
-    enablePreviewMode: true,
-  });
-  console.log('✅ StoryBlok initialized successfully');
-} catch (error) {
-  console.error('❌ Error initializing StoryBlok:', error);
-}
-
 // Storyblok components mapping
 export const components = {
   // Page-level components
@@ -62,6 +46,24 @@ export const components = {
   social_link: () => import('../components/blocks/SocialLink'),
   wavy_divider: () => import('../components/blocks/WavyDivider'),
 };
+
+// Initialize Storyblok with proper error handling
+try {
+  storyblokInit({
+    accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+    use: [apiPlugin],
+    apiOptions: {
+      region: 'eu-central-1',
+    },
+    // Enable preview mode for draft content
+    enablePreviewMode: true,
+    // Add components mapping
+    components,
+  });
+  console.log('✅ StoryBlok initialized successfully with components');
+} catch (error) {
+  console.error('❌ Error initializing StoryBlok:', error);
+}
 
 // Storyblok configuration
 export const storyblokConfig = {

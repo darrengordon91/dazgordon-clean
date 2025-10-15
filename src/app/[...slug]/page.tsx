@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { StoryblokComponent, getStoryblokApi, storyblokInit, apiPlugin } from '@storyblok/react';
+import { components } from '@/lib/storyblok';
 
 export default function DynamicPage({ 
   params,
@@ -32,6 +33,7 @@ export default function DynamicPage({
             region: 'eu-central-1',
           },
           enablePreviewMode: true,
+          components,
         });
       } catch (err) {
         console.error('Error initializing StoryBlok:', err);
