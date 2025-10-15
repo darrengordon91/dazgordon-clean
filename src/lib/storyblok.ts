@@ -1,50 +1,42 @@
 import { storyblokInit, apiPlugin } from '@storyblok/react';
 
-// Storyblok components mapping
+// Storyblok components mapping - Working components that match CMS structure
 export const components = {
   // Page-level components
   page: () => import('../components/Page'),
   
-  // Home page sections
+  // Core content blocks (working components)
   hero: () => import('../components/blocks/Hero'),
   marquee: () => import('../components/blocks/Marquee'),
   about_section: () => import('../components/blocks/AboutSection'),
   companies: () => import('../components/blocks/Companies'),
-  company_item: () => import('../components/blocks/CompanyItem'),
   projects_section: () => import('../components/blocks/ProjectsSection'),
-  project_item: () => import('../components/blocks/ProjectItem'),
   latest_work: () => import('../components/blocks/LatestWork'),
-  blog_post_item: () => import('../components/blocks/BlogPostItem'),
-  
-  // About page sections
-  beliefs: () => import('../components/blocks/Beliefs'),
-  belief_item: () => import('../components/blocks/BeliefItem'),
-  journey: () => import('../components/blocks/Journey'),
-  timeline_item: () => import('../components/blocks/TimelineItem'),
-  what_i_do: () => import('../components/blocks/WhatIDo'),
-  tool_item: () => import('../components/blocks/ToolItem'),
-  newsletter_tease: () => import('../components/blocks/NewsletterTease'),
-  
-  // Content types
-  project: () => import('../components/blocks/Project'),
-  blog_post: () => import('../components/blocks/BlogPost'),
-  tool: () => import('../components/blocks/Tool'),
-  idea: () => import('../components/blocks/Idea'),
-  book_note: () => import('../components/blocks/BookNote'),
-  
-  // Special content types
-  hundred_ways: () => import('../components/blocks/HundredWays'),
-  stuff_i_own: () => import('../components/blocks/StuffIOwn'),
-  strong_opinion: () => import('../components/blocks/StrongOpinion'),
-  
-  // Contact and services
   contact: () => import('../components/blocks/Contact'),
-  services: () => import('../components/blocks/Services'),
-  service_item: () => import('../components/blocks/ServiceItem'),
   
-  // Utility components
-  social_link: () => import('../components/blocks/SocialLink'),
-  wavy_divider: () => import('../components/blocks/WavyDivider'),
+  // Placeholder components for future expansion
+  company_item: () => import('../components/blocks/Companies'),
+  project_item: () => import('../components/blocks/ProjectsSection'),
+  blog_post_item: () => import('../components/blocks/LatestWork'),
+  beliefs: () => import('../components/blocks/AboutSection'),
+  belief_item: () => import('../components/blocks/AboutSection'),
+  journey: () => import('../components/blocks/AboutSection'),
+  timeline_item: () => import('../components/blocks/AboutSection'),
+  what_i_do: () => import('../components/blocks/AboutSection'),
+  tool_item: () => import('../components/blocks/AboutSection'),
+  newsletter_tease: () => import('../components/blocks/Contact'),
+  project: () => import('../components/blocks/ProjectsSection'),
+  blog_post: () => import('../components/blocks/LatestWork'),
+  tool: () => import('../components/blocks/AboutSection'),
+  idea: () => import('../components/blocks/AboutSection'),
+  book_note: () => import('../components/blocks/LatestWork'),
+  hundred_ways: () => import('../components/blocks/AboutSection'),
+  stuff_i_own: () => import('../components/blocks/AboutSection'),
+  strong_opinion: () => import('../components/blocks/AboutSection'),
+  services: () => import('../components/blocks/Contact'),
+  service_item: () => import('../components/blocks/Contact'),
+  social_link: () => import('../components/blocks/Contact'),
+  wavy_divider: () => import('../components/blocks/Marquee'),
 };
 
 // Initialize Storyblok with proper error handling

@@ -12,12 +12,12 @@ interface HeroProps {
 export default function Hero({ blok }: HeroProps) {
   return (
     <section className="py-20 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto text-center">
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          {blok.title || 'Hey, I\'m Daz'}
+      <div className="container mx-auto text-center max-w-4xl">
+        <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
+          {blok.title || 'Hey, I\'m Daz Gordon'}
         </h1>
         {blok.subtitle && (
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
             {blok.subtitle}
           </p>
         )}
