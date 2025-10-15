@@ -41,8 +41,9 @@ export const components = {
 
 // Initialize Storyblok with proper error handling
 try {
+  console.log('🔧 Initializing StoryBlok with components:', Object.keys(components));
   storyblokInit({
-    accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+    accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt', // Use the exact token you provided
     use: [apiPlugin],
     apiOptions: {
       region: 'eu-central-1',

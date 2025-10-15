@@ -18,6 +18,9 @@ interface PageProps {
 
 export default function Page({ blok }: PageProps) {
   console.log('🎨 Page component rendering with blok:', blok);
+  console.log('🎨 Page component type:', typeof blok);
+  console.log('🎨 Page component keys:', Object.keys(blok));
+  console.log('🎨 Page component body:', blok.body);
   
   return (
     <div className="min-h-screen">
@@ -35,10 +38,16 @@ export default function Page({ blok }: PageProps) {
       )}
       
       {blok.body && blok.body.length > 0 ? (
-        blok.body.map((block: StoryBlokBlock, index: number) => {
-          console.log(`🎨 Rendering block ${index}:`, block.component, block);
-          return <StoryblokComponent key={block._uid || index} blok={block} />;
-        })
+        <div>
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded m-4">
+            <p className="font-semibold">✅ Page component working!</p>
+            <p>Found {blok.body.length} body components to render.</p>
+          </div>
+          {blok.body.map((block: StoryBlokBlock, index: number) => {
+            console.log(`🎨 Rendering block ${index}:`, block.component, block);
+            return <StoryblokComponent key={block._uid || index} blok={block} />;
+          })}
+        </div>
       ) : (
         <div className="container mx-auto px-6 py-8">
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">

@@ -27,7 +27,7 @@ export default function DynamicPage({
     if (typeof window !== 'undefined') {
       try {
         storyblokInit({
-          accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+          accessToken: 'eHn8yhaa2KyhmUlzKb9PHgtt', // Use exact token
           use: [apiPlugin],
           apiOptions: {
             region: 'eu-central-1',
