@@ -1,10 +1,16 @@
 import { StoryblokComponent } from '@storyblok/react';
 
+interface StoryBlokBlock {
+  _uid: string;
+  component: string;
+  [key: string]: unknown;
+}
+
 interface PageProps {
   blok: {
     _uid: string;
     component: string;
-    body?: any[];
+    body?: StoryBlokBlock[];
     title?: string;
     description?: string;
   };
@@ -29,7 +35,7 @@ export default function Page({ blok }: PageProps) {
       )}
       
       {blok.body && blok.body.length > 0 ? (
-        blok.body.map((block: any, index: number) => {
+        blok.body.map((block: StoryBlokBlock, index: number) => {
           console.log(`🎨 Rendering block ${index}:`, block.component, block);
           return <StoryblokComponent key={block._uid || index} blok={block} />;
         })
