@@ -22,18 +22,20 @@ export default function DynamicPage({
   useEffect(() => {
     setMounted(true);
     
-    // Initialize StoryBlok
-    try {
-      storyblokInit({
-        accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
-        use: [apiPlugin],
-        apiOptions: {
-          region: 'eu-central-1',
-        },
-        enablePreviewMode: true,
-      });
-    } catch (err) {
-      console.error('Error initializing StoryBlok:', err);
+    // Initialize StoryBlok only on client side
+    if (typeof window !== 'undefined') {
+      try {
+        storyblokInit({
+          accessToken: process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN || 'eHn8yhaa2KyhmUlzKb9PHgtt',
+          use: [apiPlugin],
+          apiOptions: {
+            region: 'eu-central-1',
+          },
+          enablePreviewMode: true,
+        });
+      } catch (err) {
+        console.error('Error initializing StoryBlok:', err);
+      }
     }
   }, []);
 
@@ -76,7 +78,10 @@ export default function DynamicPage({
         setStory(data.story);
       } catch (err) {
         console.error('❌ Error fetching story:', err);
-        setError(err);
+        // Don't set error during build time, just show loading
+        if (typeof window !== 'undefined') {
+          setError(err);
+        }
       } finally {
         setLoading(false);
       }
@@ -103,6 +108,7 @@ export default function DynamicPage({
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading content from StoryBlok...</p>
           <p className="text-sm text-slate-500 mt-2">Page: /{slug}</p>
+          <p className="text-xs text-slate-400 mt-1">If this takes too long, the page may not exist in StoryBlok</p>
         </div>
       </div>
     );
