@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  // Redirect root to /home for StoryBlok integration
+  // Redirect root to home story
   redirect('/home');
 }
-
-export const dynamic = 'force-dynamic';
